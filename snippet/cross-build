@@ -38,7 +38,7 @@ C_ARES_BUILD() {
     mkdir -p $BUILD_DIR/c-ares && cd $BUILD_DIR/c-ares
     curl -Ls -o - "$C_ARES" | tar zxf - --strip-components=1
     if [ "${cares_ver}" = "1.17.1" ]; then
-    echo "patching c-ares"
+    	echo "patching c-ares"
     	patch -p1 < $SCRIPT_DIR/patch/dependences-patch/c-ares*.patch
     	autoreconf -fi || autoreconf -fiv
     fi
