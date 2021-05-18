@@ -1,0 +1,75 @@
+#
+# Copyright (c) 2020 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Aria2-Pro-Core
+#
+
+name: Aria2 Builder
+
+on:
+    workflow_dispatch:
+    repository_dispatch:
+    push:
+        paths-ignore:
+            - '**.md'
+            - 'LICENSE'
+    schedule:
+        - cron: 0 8 * * 5
+env: 
+    TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        PLATFORMS: [win-x86, win-x64] 
+        include:
+        - PLATFORMS: win-x86
+          BUILDER_IMAGE: debian:10
+          BUILD_SCRIPT: aria2-windows-cross-build-X86.sh
+        - PLATFORMS: win-x64
+          BUILDER_IMAGE: debian:10
+          BUILD_SCRIPT: aria2-windows-cross-build-X64.sh
+
+
+    steps:
+
+    - name: Install QEMU
+      run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+
+    - name: Build
+      env:
+        DOCKER_BUILDKIT: 1
+        BUILDER_IMAGE: ${{ matrix.BUILDER_IMAGE }}
+        BUILD_SCRIPT: ${{ matrix.BUILD_SCRIPT }}
+      run: |
+        docker buildx build \
+          --builder "$(docker buildx create --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=50485760)" \
+          --build-arg BUILDER_IMAGE \
+          --build-arg BUILD_SCRIPT \
+          --platform=local \
+          -o ./output . \
+          2>&1 | tee build.log
+
+
+    - name: Output Error Log
+      if: (!cancelled())
+      run: grep -iE 'fatal|error|critical|failure|warning' build.log
+
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: aria2-${{ matrix.PLATFORMS }}
+        path: output
