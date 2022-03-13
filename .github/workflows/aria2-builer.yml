@@ -31,10 +31,10 @@ jobs:
         PLATFORMS: [win-x86, win-x64] 
         include:
         - PLATFORMS: win-x86
-          BUILDER_IMAGE: debian:10
+          BUILDER_IMAGE: debian:11
           BUILD_SCRIPT: aria2-windows-cross-build-X86.sh
         - PLATFORMS: win-x64
-          BUILDER_IMAGE: debian:10
+          BUILDER_IMAGE: debian:11
           BUILD_SCRIPT: aria2-windows-cross-build-X64.sh
 
 
